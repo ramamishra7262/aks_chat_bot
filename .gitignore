@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+node_modules/
+dist/
+build/
+*.log
+.terraform/
+*.tfstate
+*.tfstate.*
+.DS_Store
+kubeconfig

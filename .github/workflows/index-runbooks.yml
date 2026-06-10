@@ -1,0 +1,37 @@
+name: Index AKS Runbooks (RAG)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/runbooks/**"
+      - "infra/scripts/index-k8s-docs.py"
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install azure-search-documents openai azure-identity
+
+      - name: Build/refresh AI Search index
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_API_VERSION: "2024-05-01-preview"
+          AZURE_SEARCH_ENDPOINT: ${{ secrets.AZURE_SEARCH_ENDPOINT }}
+          AZURE_SEARCH_API_KEY: ${{ secrets.AZURE_SEARCH_API_KEY }}
+          AZURE_SEARCH_INDEX: aks-runbooks-index
+        run: python infra/scripts/index-k8s-docs.py

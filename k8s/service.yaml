@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aks-copilot-backend
+  namespace: aks-copilot
+  labels:
+    app: aks-copilot-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: aks-copilot-backend
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aks-copilot-frontend
+  namespace: aks-copilot
+  labels:
+    app: aks-copilot-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: aks-copilot-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http

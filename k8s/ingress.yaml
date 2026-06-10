@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aks-copilot-ingress
+  namespace: aks-copilot
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.org/proxy-read-timeout: "3600"
+    nginx.ingress.org/proxy-buffering: "off"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - aks-copilot.example.com
+      secretName: aks-copilot-tls
+  rules:
+    - host: aks-copilot.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: aks-copilot-backend
+                port:
+                  number: 8000
+          - path: /healthz
+            pathType: Exact
+            backend:
+              service:
+                name: aks-copilot-backend
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: aks-copilot-frontend
+                port:
+                  number: 80

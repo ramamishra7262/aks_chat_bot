@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aks-copilot-config
+  namespace: aks-copilot
+data:
+  AZURE_OPENAI_DEPLOYMENT: "gpt-4o"
+  AZURE_OPENAI_API_VERSION: "2024-05-01-preview"
+  AZURE_SEARCH_INDEX: "aks-runbooks-index"
+  KUBE_CONTEXT: "in-cluster"
+  KUBE_NAMESPACE_ALLOWLIST: "default,app,monitoring,aks-copilot"
+  ENABLE_MUTATIONS: "true"
+  APP_ENV: "production"
+  LOG_LEVEL: "INFO"
+  CORS_ORIGINS: "*"

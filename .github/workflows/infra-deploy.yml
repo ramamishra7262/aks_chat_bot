@@ -1,0 +1,70 @@
+name: Deploy Azure AI Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/bicep/**"
+      - ".github/workflows/infra-deploy.yml"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Action to perform"
+        type: choice
+        options: [deploy, what-if]
+        default: deploy
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+  NAME_PREFIX: akscopilot
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Bicep what-if
+        if: github.event.inputs.action == 'what-if'
+        run: |
+          az deployment group what-if \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --template-file infra/bicep/main.bicep \
+            --parameters namePrefix=${{ env.NAME_PREFIX }}
+
+      - name: Deploy AI infrastructure
+        if: github.event.inputs.action != 'what-if'
+        run: |
+          az deployment group create \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --template-file infra/bicep/main.bicep \
+            --parameters namePrefix=${{ env.NAME_PREFIX }} \
+            --name aks-copilot-$(date +%Y%m%d%H%M%S)
+
+      - name: Capture outputs
+        if: github.event.inputs.action != 'what-if'
+        run: |
+          az deployment group show \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --name $(az deployment group list -g "${{ env.RESOURCE_GROUP }}" --query "[0].name" -o tsv) \
+            --query properties.outputs -o json > infra-outputs.json
+          cat infra-outputs.json
+
+      - name: Upload infra outputs
+        if: github.event.inputs.action != 'what-if'
+        uses: actions/upload-artifact@v4
+        with:
+          name: infra-outputs
+          path: infra-outputs.json
